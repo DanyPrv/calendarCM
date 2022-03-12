@@ -52,7 +52,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle style =
+        TextButton.styleFrom(primary: Theme.of(context).colorScheme.onPrimary);
     return Scaffold(
+      appBar: AppBar(
+        leading:
+          IconButton(
+            icon: const Icon(Icons.list),
+            tooltip: 'Show Snackbar',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Show menu')));
+            },
+          ),
+        title: const Text('Calendar'),
+        actions: <Widget>[
+          TextButton(
+            style: style,
+            onPressed: () {ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Action 1')));},
+            child: const Text('Action 1'),
+          ),
+          TextButton(
+            style: style,
+            onPressed: () {ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Action 2')));},
+            child: const Text('Action 2'),
+          )
+        ],
+      ),
       body:SfCalendar(
         view: CalendarView.week,
         firstDayOfWeek: 1,
