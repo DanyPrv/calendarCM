@@ -51,7 +51,7 @@ class _LoginState extends State<Login> {
                 alignment: Alignment.center,
                 padding: const EdgeInsets.all(10),
                 child: const Text(
-                  'Sign in',
+                  'Login',
                   style: TextStyle(fontSize: 20),
                 )),
             Container(
@@ -75,39 +75,35 @@ class _LoginState extends State<Login> {
                 ),
               ),
             ),
-            // TextButton(
-            //   onPressed: () {
-            //     //forgot password screen
-            //   },
-            //   child: const Text('Forgot Password',),
-            // ),
             Container(
                 height: 100,
                 padding: const EdgeInsets.fromLTRB(20, 50, 20, 0),
                 child: ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const CalendarSection(title: 'Calendar')),
-                    );
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                const CalendarSection(title: 'Calendar')),
+                        (route) => false);
                     //print(emailController.text);
                     //print(passwordController.text);
                   },
-                )
-            ),
+                )),
             Row(
               children: <Widget>[
                 const Text('Does not have account?'),
                 TextButton(
                   child: const Text(
-                    'Sign in',
+                    'Sign up',
                     style: TextStyle(fontSize: 20),
                   ),
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const RegisterSection()),
+                      MaterialPageRoute(
+                          builder: (context) => const RegisterSection()),
                     );
                   },
                 )

@@ -8,12 +8,9 @@ class RegisterSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: const Register(),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text(_title)),
+      body: const Register(),
     );
   }
 }
@@ -102,13 +99,13 @@ class _RegisterState extends State<Register> {
                 child: ElevatedButton(
                   child: const Text('Register'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginSection()),
-                    );
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginSection()),
+                        (route) => false);
                   },
-                )
-            ),
+                )),
           ],
         ));
   }

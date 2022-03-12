@@ -8,12 +8,9 @@ class EditAccountDetailsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: _title,
-      home: Scaffold(
-        appBar: AppBar(title: const Text(_title)),
-        body: const EditAccountDetails(),
-      ),
+    return Scaffold(
+      appBar: AppBar(title: const Text(_title)),
+      body: const EditAccountDetails(),
     );
   }
 }
@@ -26,9 +23,12 @@ class EditAccountDetails extends StatefulWidget {
 }
 
 class _EditAccountDetailsState extends State<EditAccountDetails> {
-  TextEditingController nameController = TextEditingController(text: 'User Test');
-  TextEditingController emailController = TextEditingController(text: 'test@test.ro');
-  TextEditingController oldPasswordController = TextEditingController(text: 'initial value');
+  TextEditingController nameController =
+      TextEditingController(text: 'User Test');
+  TextEditingController emailController =
+      TextEditingController(text: 'test@test.ro');
+  TextEditingController oldPasswordController =
+      TextEditingController(text: 'initial value');
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController repeatNewPasswordController = TextEditingController();
 
@@ -116,11 +116,12 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CalendarSection(title: 'Calendar')),
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const CalendarSection(title: 'Calendar')),
                     );
                   },
-                )
-            ),
+                )),
           ],
         ));
   }
