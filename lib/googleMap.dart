@@ -12,6 +12,9 @@ class GoogleMapSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(title: const Text(_title)),
+        floatingActionButton:
+            ElevatedButton(onPressed: () {}, child: const Text('Add location')),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         body: const GoogleMap(initialCameraPosition: _initialCameraPosition));
   }
 }

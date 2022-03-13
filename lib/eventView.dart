@@ -1,18 +1,49 @@
+import 'package:calendar/addEditEvent.dart';
+import 'package:calendar/calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:intl/intl.dart';
+import 'Classes/calendarAppointment.dart';
 
 class EventViewSection extends StatelessWidget {
   const EventViewSection({Key? key, required this.event}) : super(key: key);
 
-  final Appointment event;
+  final CalendarAppointment event;
   static const String _title = 'Event view';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text(_title)),
+      appBar: AppBar(
+        title: const Text(_title),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AddEditEventSection(
+                            event: event,
+                            isEdit: true,
+                          )));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            onPressed: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          const CalendarSection(title: 'Calendar')));
+
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(const SnackBar(content: Text('Deleted')));
+            },
+          ),
+        ],
+      ),
       body: EventView(event: event),
     );
   }
@@ -20,7 +51,7 @@ class EventViewSection extends StatelessWidget {
 
 class EventView extends StatefulWidget {
   const EventView({Key? key, required this.event}) : super(key: key);
-  final Appointment event;
+  final CalendarAppointment event;
   @override
   State<EventView> createState() => _EventViewState();
 }
@@ -50,108 +81,82 @@ class _EventViewState extends State<EventView> {
                   child: Text(
                     widget.event.subject,
                     textAlign: TextAlign.left,
-                    style: const TextStyle(fontSize: 18),
+                    style: const TextStyle(fontSize: 22),
                   ),
                 ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.only(top: 35),
-              child: Row(
-                children: <Widget>[
-                  const Padding(
-                    padding: EdgeInsets.only(right: 20),
-                    child: Icon(
-                      Icons.access_time,
-                      color: Colors.green,
-                    ),
+            Container(
+                alignment: Alignment.topLeft,
+                padding: const EdgeInsets.only(top: 25, bottom: 7),
+                child: const Text(
+                  'Start date:',
+                  style: TextStyle(fontSize: 20),
+                )),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    DateFormat('dd/MM/yyyy')
+                        .format(widget.event.startTime)
+                        .toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
                   ),
-                  const Expanded(
-                    child: Text(
-                      'Starts on:',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 17),
-                    ),
+                ),
+                Expanded(
+                  child: Text(
+                    DateFormat('hh:mm a')
+                        .format(widget.event.startTime)
+                        .toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
                   ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      DateFormat('dd/MM/yyyy')
-                              .format(widget.event.startTime)
-                              .toString() +
-                          ' at ' +
-                          DateFormat('hh:mm a')
-                              .format(widget.event.startTime)
-                              .toString(),
-                      textAlign: TextAlign.left,
-                      style: const TextStyle(fontSize: 17),
-                    ),
+                )
+              ],
+            ),
+            Container(
+                alignment: Alignment.topLeft,
+                padding: const EdgeInsets.only(top: 15, bottom: 7),
+                child: const Text(
+                  'End date:',
+                  style: TextStyle(fontSize: 20),
+                )),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    DateFormat('dd/MM/yyyy')
+                        .format(widget.event.endTime)
+                        .toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
                   ),
-                ],
-              ),
+                ),
+                Expanded(
+                  child: Text(
+                    DateFormat('hh:mm a')
+                        .format(widget.event.endTime)
+                        .toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                )
+              ],
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Row(
-                children: <Widget>[
-                  const Padding(
-                    padding: EdgeInsets.only(right: 20),
-                    child: Icon(
-                      Icons.access_time,
-                      color: Colors.red,
-                    ),
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Ends on:',
-                      textAlign: TextAlign.left,
-                      style: TextStyle(fontSize: 17),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      DateFormat('dd/MM/yyyy')
-                              .format(widget.event.endTime)
-                              .toString() +
-                          ' at ' +
-                          DateFormat('hh:mm a')
-                              .format(widget.event.endTime)
-                              .toString(),
-                      textAlign: TextAlign.left,
-                      style: const TextStyle(fontSize: 17),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-                padding: const EdgeInsets.only(top: 30),
+                padding: const EdgeInsets.only(top: 25),
                 child: Column(
                   children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: const <Widget>[
-                          Padding(
-                            padding: EdgeInsets.only(right: 20),
-                            child: Icon(
-                              Icons.location_city,
-                              color: Colors.amber,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              'Location:',
-                              textAlign: TextAlign.left,
-                              style: TextStyle(fontSize: 17),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    Container(
+                        alignment: Alignment.topLeft,
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: const Text(
+                          'Location:',
+                          style: TextStyle(fontSize: 20),
+                        )),
                     SizedBox(
-                        height: 300,
+                        height: 250,
                         child: Scaffold(
                           body: GoogleMap(
                             initialCameraPosition: _initialCameraPosition,
@@ -160,6 +165,57 @@ class _EventViewState extends State<EventView> {
                             markers: getmarkers(),
                           ),
                         )),
+                  ],
+                )),
+            Padding(
+                padding: const EdgeInsets.only(top: 25),
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                        alignment: Alignment.topLeft,
+                        child: const Text(
+                          'Reminders:',
+                          style: TextStyle(fontSize: 20),
+                        )),
+                    SizedBox(
+                      height: 130,
+                      child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 4, horizontal: 8),
+                          itemCount: widget.event.reminders.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            var difference = widget.event.reminders[index]
+                                .difference(widget.event.startTime);
+
+                            var text = '';
+                            if (difference.inDays != 0) {
+                              text = difference.inDays.toString() +
+                                  ' ' +
+                                  (difference.inDays > 1 ? 'days' : 'day') +
+                                  ' before';
+                            } else if (difference.inHours != 0) {
+                              text = difference.inHours.toString() +
+                                  ' ' +
+                                  (difference.inHours > 1 ? 'hours' : 'hour') +
+                                  ' before';
+                            } else if (difference.inMinutes != 0) {
+                              text = difference.inMinutes.toString() +
+                                  ' ' +
+                                  (difference.inMinutes > 1
+                                      ? 'minutes'
+                                      : 'minute') +
+                                  ' before';
+                            }
+
+                            return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 35),
+                                child: Text(
+                                  text,
+                                  style: const TextStyle(fontSize: 17),
+                                ));
+                          }),
+                    )
                   ],
                 )),
           ],

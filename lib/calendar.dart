@@ -1,11 +1,12 @@
+import 'package:calendar/addEditEvent.dart';
 import 'package:calendar/eventView.dart';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'editAccountDetails.dart';
 import 'login.dart';
 import 'eventView.dart';
+import 'Classes/calendarAppointment.dart';
 
 class CalendarSection extends StatefulWidget {
   const CalendarSection({Key? key, required this.title}) : super(key: key);
@@ -87,7 +88,26 @@ class _CalendarSectionState extends State<CalendarSection> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Add your onPressed code here!
+          DateTime today = DateTime.now();
+          DateTime startTime = DateTime(
+              today.year, today.month, today.day, today.hour, today.minute);
+          DateTime endTime = startTime.add(const Duration(days: 1));
+
+          CalendarAppointment event = CalendarAppointment(
+              startTime: startTime,
+              endTime: endTime,
+              subject: '',
+              location: '',
+              color: Colors.blue[300],
+              reminders: [startTime.add(const Duration(minutes: 10))]);
+
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => AddEditEventSection(
+                        event: event,
+                        isEdit: false,
+                      )));
         },
         backgroundColor: Colors.blue,
         child: const Icon(Icons.add),
@@ -101,8 +121,6 @@ class _CalendarSectionState extends State<CalendarSection> {
       _controller.view = CalendarView.day;
     }
     if (calendarTapDetails.targetElement == CalendarElement.appointment) {
-      inspect(CalendarElement.appointment);
-      inspect(calendarTapDetails);
       Navigator.push(
           context,
           MaterialPageRoute(
@@ -112,8 +130,8 @@ class _CalendarSectionState extends State<CalendarSection> {
   }
 }
 
-List<Appointment> getAppointments() {
-  List<Appointment> meetings = <Appointment>[];
+List<CalendarAppointment> getAppointments() {
+  List<CalendarAppointment> meetings = <CalendarAppointment>[];
   final DateTime today = DateTime.now();
   DateTime startTime = DateTime(today.year, today.month, today.day, 9, 0, 0);
   DateTime endTime = startTime.add(const Duration(hours: 6));
@@ -121,21 +139,23 @@ List<Appointment> getAppointments() {
   for (int i = 0; i < 10; i++) {
     startTime = startTime.add(const Duration(days: 1));
     endTime = endTime.add(const Duration(days: 1));
-    meetings.add(Appointment(
-      startTime: startTime,
-      endTime: endTime,
-      subject: 'Board Meeting $i',
-      location: 'location $i',
-      color: Colors.blue,
-      // recurrenceRule: 'FREQ=DAILY;COUNT=10',
-      // isAllDay: false
-    ));
+    meetings.add(CalendarAppointment(
+        startTime: startTime,
+        endTime: endTime,
+        subject: 'Board Meeting $i',
+        location: 'location $i',
+        color: Colors.blue[300],
+        reminders: [
+          startTime.add(const Duration(minutes: 10)),
+          startTime.add(const Duration(hours: 3)),
+          startTime.add(const Duration(days: 5))
+        ]));
   }
   return meetings;
 }
 
 class MeetingDataSource extends CalendarDataSource {
-  MeetingDataSource(List<Appointment> source) {
+  MeetingDataSource(List<CalendarAppointment> source) {
     appointments = source;
   }
 }
