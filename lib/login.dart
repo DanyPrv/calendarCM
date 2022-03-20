@@ -1,5 +1,6 @@
 import 'package:calendar/register.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'calendar.dart';
 
@@ -8,8 +9,10 @@ class LoginSection extends StatelessWidget {
 
   static const String _title = 'Login';
 
-  void tmpFunction() {
-    print('Facebook action');
+  void launchURL(String url) async {
+    if (!await launch(url)) {
+      throw 'Could not launch $url';
+    }
   }
 
   @override
@@ -19,19 +22,36 @@ class LoginSection extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: const Login(),
-        floatingActionButton: InkWell(
-          onTap: () {
-            tmpFunction();
-          },
-          // focusColor: const Color.fromARGB(61, 33, 124, 243),
-          // hoverColor: const Color.fromARGB(61, 33, 124, 243),
-          // highlightColor: const Color.fromARGB(61, 33, 124, 243),
-          borderRadius: BorderRadius.circular(50.0),
-          child: Image.asset(
-            'assets/logo-facebook.png',
-            width: 50,
-            height: 50,
-          ),
+        floatingActionButton:
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            InkWell(
+              onTap: () => launchURL('https://www.facebook.com/'),
+
+              // focusColor: const Color.fromARGB(61, 33, 124, 243),
+              // hoverColor: const Color.fromARGB(61, 33, 124, 243),
+              // highlightColor: const Color.fromARGB(61, 33, 124, 243),
+              borderRadius: BorderRadius.circular(50.0),
+              child: Image.asset(
+                'assets/logo-facebook.png',
+                width: 50,
+                height: 50,
+              ),
+            ),
+            InkWell(
+              onTap: () => launchURL('https://twitter.com/'),
+              // focusColor: const Color.fromARGB(61, 33, 124, 243),
+              // hoverColor: const Color.fromARGB(61, 33, 124, 243),
+              // highlightColor: const Color.fromARGB(61, 33, 124, 243),
+              borderRadius: BorderRadius.circular(50.0),
+              child: Image.asset(
+                'assets/logo-twitter.png',
+                width: 50,
+                height: 50,
+              ),
+            ),
+        ],
         ),
       ),
     );
