@@ -8,6 +8,10 @@ class LoginSection extends StatelessWidget {
 
   static const String _title = 'Login';
 
+  void tmpFunction() {
+    print('Facebook action');
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -15,6 +19,20 @@ class LoginSection extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: const Login(),
+        floatingActionButton: InkWell(
+          onTap: () {
+            tmpFunction();
+          },
+          // focusColor: const Color.fromARGB(61, 33, 124, 243),
+          // hoverColor: const Color.fromARGB(61, 33, 124, 243),
+          // highlightColor: const Color.fromARGB(61, 33, 124, 243),
+          borderRadius: BorderRadius.circular(50.0),
+          child: Image.asset(
+            'assets/logo-facebook.png',
+            width: 50,
+            height: 50,
+          ),
+        ),
       ),
     );
   }
