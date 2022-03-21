@@ -22,9 +22,8 @@ class LoginSection extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: const Login(),
-        floatingActionButton:
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
             InkWell(
               onTap: () => launchURL('https://www.facebook.com/'),
@@ -51,7 +50,7 @@ class LoginSection extends StatelessWidget {
                 height: 50,
               ),
             ),
-        ],
+          ],
         ),
       ),
     );
