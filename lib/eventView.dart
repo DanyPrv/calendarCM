@@ -35,8 +35,10 @@ class EventViewSection extends StatelessWidget {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          const CalendarSection(title: 'Calendar')));
+                      builder: (context) => const CalendarSection(
+                            title: 'Calendar',
+                            username: '',
+                          )));
 
               ScaffoldMessenger.of(context)
                   .showSnackBar(const SnackBar(content: Text('Deleted')));

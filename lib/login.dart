@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:calendar/Database/database.dart';
 import 'package:calendar/register.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -22,36 +25,36 @@ class LoginSection extends StatelessWidget {
       home: Scaffold(
         appBar: AppBar(title: const Text(_title)),
         body: const Login(),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            InkWell(
-              onTap: () => launchURL('https://www.facebook.com/'),
+        // floatingActionButton: Row(
+        //   mainAxisAlignment: MainAxisAlignment.end,
+        //   children: [
+        //     InkWell(
+        //       onTap: () => launchURL('https://www.facebook.com/'),
 
-              // focusColor: const Color.fromARGB(61, 33, 124, 243),
-              // hoverColor: const Color.fromARGB(61, 33, 124, 243),
-              // highlightColor: const Color.fromARGB(61, 33, 124, 243),
-              borderRadius: BorderRadius.circular(50.0),
-              child: Image.asset(
-                'assets/logo-facebook.png',
-                width: 50,
-                height: 50,
-              ),
-            ),
-            InkWell(
-              onTap: () => launchURL('https://twitter.com/'),
-              // focusColor: const Color.fromARGB(61, 33, 124, 243),
-              // hoverColor: const Color.fromARGB(61, 33, 124, 243),
-              // highlightColor: const Color.fromARGB(61, 33, 124, 243),
-              borderRadius: BorderRadius.circular(50.0),
-              child: Image.asset(
-                'assets/logo-twitter.png',
-                width: 50,
-                height: 50,
-              ),
-            ),
-          ],
-        ),
+        //       // focusColor: const Color.fromARGB(61, 33, 124, 243),
+        //       // hoverColor: const Color.fromARGB(61, 33, 124, 243),
+        //       // highlightColor: const Color.fromARGB(61, 33, 124, 243),
+        //       borderRadius: BorderRadius.circular(50.0),
+        //       child: Image.asset(
+        //         'assets/logo-facebook.png',
+        //         width: 50,
+        //         height: 50,
+        //       ),
+        //     ),
+        //     InkWell(
+        //       onTap: () => launchURL('https://twitter.com/'),
+        //       // focusColor: const Color.fromARGB(61, 33, 124, 243),
+        //       // hoverColor: const Color.fromARGB(61, 33, 124, 243),
+        //       // highlightColor: const Color.fromARGB(61, 33, 124, 243),
+        //       borderRadius: BorderRadius.circular(50.0),
+        //       child: Image.asset(
+        //         'assets/logo-twitter.png',
+        //         width: 50,
+        //         height: 50,
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ),
     );
   }
@@ -65,8 +68,23 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  TextEditingController emailController = TextEditingController();
+  late Database _db;
+  TextEditingController usernameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _db = Database();
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +112,7 @@ class _LoginState extends State<Login> {
             Container(
               padding: const EdgeInsets.all(10),
               child: TextField(
-                controller: emailController,
+                controller: usernameController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Username',
@@ -117,15 +135,16 @@ class _LoginState extends State<Login> {
                 padding: const EdgeInsets.fromLTRB(20, 50, 20, 0),
                 child: ElevatedButton(
                   child: const Text('Login'),
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                const CalendarSection(title: 'Calendar')),
-                        (route) => false);
-                    //print(emailController.text);
-                    //print(passwordController.text);
+                  onPressed: () async {
+                    _db.getUser(usernameController.text).then((value) => {
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => CalendarSection(
+                                      title: 'Calendar',
+                                      username: value.username)),
+                              (route) => false)
+                        });
                   },
                 )),
             Row(

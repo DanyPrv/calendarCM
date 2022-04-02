@@ -9,7 +9,8 @@ import 'eventView.dart';
 import 'Classes/calendarAppointment.dart';
 
 class CalendarSection extends StatefulWidget {
-  const CalendarSection({Key? key, required this.title}) : super(key: key);
+  const CalendarSection({Key? key, required this.title, required this.username})
+      : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -21,6 +22,7 @@ class CalendarSection extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final String username;
 
   @override
   State<CalendarSection> createState() => _CalendarSectionState();

@@ -296,8 +296,10 @@ class _AddEditEventState extends State<AddEditEvent> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              const CalendarSection(title: 'Calendar')),
+                          builder: (context) => const CalendarSection(
+                                title: 'Calendar',
+                                username: '',
+                              )),
                     );
                   },
                 )),

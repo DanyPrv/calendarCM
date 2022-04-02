@@ -1,5 +1,7 @@
+import 'package:calendar/Database/database.dart';
 import 'package:flutter/material.dart';
 import 'calendar.dart';
+import 'package:drift/drift.dart' as drift;
 
 class EditAccountDetailsSection extends StatelessWidget {
   const EditAccountDetailsSection({Key? key}) : super(key: key);
@@ -23,6 +25,7 @@ class EditAccountDetails extends StatefulWidget {
 }
 
 class _EditAccountDetailsState extends State<EditAccountDetails> {
+  late Database _db;
   TextEditingController nameController =
       TextEditingController(text: 'User Test');
   TextEditingController emailController =
@@ -31,6 +34,24 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
       TextEditingController(text: 'initial value');
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController repeatNewPasswordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _db = Database();
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    nameController.dispose();
+    emailController.dispose();
+    oldPasswordController.dispose();
+    newPasswordController.dispose();
+    repeatNewPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,12 +135,19 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
                 child: ElevatedButton(
                   child: const Text('Save changes'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const CalendarSection(title: 'Calendar')),
+                    final entity = UsersCompanion(
+                      username: drift.Value(nameController.text),
+                      email: drift.Value(emailController.text),
+                      password: drift.Value(newPasswordController.text),
                     );
+                    _db.updateUser(entity).then((value) => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const CalendarSection(
+                                    title: 'Calendar',
+                                    username: '',
+                                  )),
+                        ));
                   },
                 )),
           ],

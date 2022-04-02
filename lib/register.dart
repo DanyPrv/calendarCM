@@ -1,5 +1,10 @@
+import 'dart:developer';
+
+import 'package:calendar/Database/database.dart';
 import 'package:flutter/material.dart';
 import 'login.dart';
+import 'Database/database.dart';
+import 'package:drift/drift.dart' as drift;
 
 class RegisterSection extends StatelessWidget {
   const RegisterSection({Key? key}) : super(key: key);
@@ -23,10 +28,28 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  late Database _db;
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController repeatPasswordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _db = Database();
+  }
+
+  @override
+  void dispose() {
+    _db.close();
+    nameController.dispose();
+    emailController.dispose();
+    repeatPasswordController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,11 +122,19 @@ class _RegisterState extends State<Register> {
                 child: ElevatedButton(
                   child: const Text('Register'),
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginSection()),
-                        (route) => false);
+                    final entity = UsersCompanion(
+                      username: drift.Value(nameController.text),
+                      email: drift.Value(emailController.text),
+                      password: drift.Value(passwordController.text),
+                    );
+                    _db.registerUser(entity).then((value) => {
+                          Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const LoginSection()),
+                              (route) => false)
+                          // }
+                        });
                   },
                 )),
           ],
