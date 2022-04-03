@@ -17,7 +17,7 @@ void callbackDispatcher() {
         for(int i=0; i<reminders.length; i++) {
           String eventBody = 'You have one event in ' +
               reminders[i].difference(DateTime.now()).inMinutes.toString() +
-              ' minute(s) ' + reminders[i].toString();
+              ' minute(s) ';
           await flutterLocalNotificationsPlugin.zonedSchedule(
               i,
               'Event',
