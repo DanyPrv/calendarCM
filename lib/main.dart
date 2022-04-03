@@ -1,7 +1,22 @@
 import 'package:calendar/login.dart';
+import 'package:calendar/worker.dart';
 import 'package:flutter/material.dart';
+import 'package:workmanager/workmanager.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().cancelAll();
+  await Workmanager().initialize(
+    callbackDispatcher,
+  );
+  await Workmanager().registerPeriodicTask(
+    "2",
+    fetchReminder,
+    frequency: const Duration(minutes: 15),
+    constraints: Constraints(
+      networkType: NetworkType.connected,
+    ),
+  );
   runApp(const MyApp());
 }
 

@@ -37,9 +37,14 @@ class Database extends _$Database {
     return await select(users).get();
   }
 
-  Future<User> getUser(String username) async {
-    return await (select(users)..where((tbl) => tbl.username.equals(username)))
-        .getSingle();
+  Future<User?> getUser(String email) async {
+    try {
+      User user = await (select(users)..where((tbl) => tbl.email.equals(email)))
+          .getSingle();
+      return user;
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<int> registerUser(UsersCompanion entity) async {

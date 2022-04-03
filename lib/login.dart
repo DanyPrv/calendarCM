@@ -69,7 +69,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   late Database _db;
-  TextEditingController usernameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   @override
@@ -81,7 +81,7 @@ class _LoginState extends State<Login> {
   @override
   void dispose() {
     _db.close();
-    usernameController.dispose();
+    emailController.dispose();
     passwordController.dispose();
     super.dispose();
   }
@@ -112,10 +112,10 @@ class _LoginState extends State<Login> {
             Container(
               padding: const EdgeInsets.all(10),
               child: TextField(
-                controller: usernameController,
+                controller: emailController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Username',
+                  labelText: 'Email',
                 ),
               ),
             ),
@@ -136,14 +136,21 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () async {
-                    _db.getUser(usernameController.text).then((value) => {
+                    _db.getUser(emailController.text).then((value) => {
+                        if(value != null) {
                           Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => CalendarSection(
-                                      title: 'Calendar',
-                                      username: value.username)),
-                              (route) => false)
+                                  builder: (context) =>
+                                      CalendarSection(
+                                          title: 'Calendar',
+                                          username: value.username
+                                      )
+                              ),
+                                  (route) => false)
+                        } else {
+                          //TODO add login error message
+                        }
                         });
                   },
                 )),
