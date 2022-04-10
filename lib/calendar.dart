@@ -42,33 +42,34 @@ class _CalendarSectionState extends State<CalendarSection> {
   void dispose() {
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-
+    var helloText = 'Hello ' + widget.user.username.toString() + '!';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Calendar'),
       ),
       body: FutureBuilder<List<CalendarAppointment>>(
         future: getAppointments(dbProvider.getDatabase(), widget.user.id),
-        builder: (BuildContext context, AsyncSnapshot<List<CalendarAppointment>> snapshot){
+        builder: (BuildContext context,
+            AsyncSnapshot<List<CalendarAppointment>> snapshot) {
           if (snapshot.hasData) {
-            return
-              SfCalendar(
-                view: CalendarView.month,
-                allowedViews: const [
-                  CalendarView.day,
-                  CalendarView.month,
-                  CalendarView.week,
-                  CalendarView.schedule
-                ],
-                onTap: calendarTapped,
-                allowDragAndDrop: true,
-                firstDayOfWeek: 1,
-                controller: _controller,
-                initialDisplayDate: DateTime.now(),
-                dataSource: MeetingDataSource(snapshot.data),
-              );
+            return SfCalendar(
+              view: CalendarView.month,
+              allowedViews: const [
+                CalendarView.day,
+                CalendarView.month,
+                CalendarView.week,
+                CalendarView.schedule
+              ],
+              onTap: calendarTapped,
+              allowDragAndDrop: true,
+              firstDayOfWeek: 1,
+              controller: _controller,
+              initialDisplayDate: DateTime.now(),
+              dataSource: MeetingDataSource(snapshot.data),
+            );
           } else {
             return const SizedBox(
               width: 60,
@@ -82,13 +83,13 @@ class _CalendarSectionState extends State<CalendarSection> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const SizedBox(
+            SizedBox(
               height: 120.0,
               child: DrawerHeader(
-                  decoration: BoxDecoration(color: Colors.blue),
+                  decoration: const BoxDecoration(color: Colors.blue),
                   child: Text(
-                    'Hello User Test!',
-                    style: TextStyle(color: Colors.white, fontSize: 23.0),
+                    helloText,
+                    style: const TextStyle(color: Colors.white, fontSize: 23.0),
                   )),
             ),
             ListTile(
@@ -97,8 +98,9 @@ class _CalendarSectionState extends State<CalendarSection> {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) =>
-                            const EditAccountDetailsSection()));
+                        builder: (context) => EditAccountDetailsSection(
+                              user: widget.user,
+                            )));
               },
             ),
             ListTile(
@@ -122,6 +124,7 @@ class _CalendarSectionState extends State<CalendarSection> {
           DateTime endTime = startTime.add(const Duration(days: 1));
 
           CalendarAppointment event = CalendarAppointment(
+              appointmentId: -1,
               startTime: startTime,
               endTime: endTime,
               subject: '',
@@ -153,36 +156,40 @@ class _CalendarSectionState extends State<CalendarSection> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  EventViewSection(
-                    event: calendarTapDetails.appointments?[0],
-                    user:widget.user
-                  )
-          ));
+              builder: (context) => EventViewSection(
+                  event: calendarTapDetails.appointments?[0],
+                  user: widget.user)));
     }
   }
 }
 
-Future<List<CalendarAppointment>> getAppointments(DB.Database _db, int userId) async {
-   var apps = await _db.getAppointmentsByUserId(userId);
-   List<CalendarAppointment> meetings = <CalendarAppointment>[];
-   for (DB.Appointment app in apps)
-   {
-     meetings.add(CalendarAppointment(
-         reminders: [],
-         location: app.location,
-         endTime: app.endTime,
-         color: Colors.blue,
-         startTime: app.startTime,
-         subject: app.subject)
-     );
-   }
+Future<List<CalendarAppointment>> getAppointments(
+    DB.Database _db, int userId) async {
+  var apps = await _db.getAppointmentsByUserId(userId);
+  List<CalendarAppointment> meetings = <CalendarAppointment>[];
+  for (DB.Appointment app in apps) {
+    var reminders = await _db.getRemindersByAppointmentId(app.id);
+    List<DateTime> appointmentReminders = [];
+    if (reminders.isNotEmpty) {
+      for (DB.Reminder reminder in reminders) {
+        appointmentReminders.add(reminder.reminderTime);
+      }
+    }
+    meetings.add(CalendarAppointment(
+        appointmentId: app.id,
+        reminders: appointmentReminders,
+        location: app.location,
+        endTime: app.endTime,
+        color: Colors.blue,
+        startTime: app.startTime,
+        subject: app.subject));
+  }
 
-   return meetings;
+  return meetings;
 }
 
 class MeetingDataSource extends CalendarDataSource {
-  MeetingDataSource(List<CalendarAppointment> ?source) {
+  MeetingDataSource(List<CalendarAppointment>? source) {
     appointments = source;
   }
 }

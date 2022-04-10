@@ -133,22 +133,25 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () async {
-                    dbProvider.getDatabase().getUser(emailController.text).then((value) => {
-                        if(value != null) {
-                          Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      CalendarSection(
-                                          title: 'Calendar',
-                                          user: value
-                                      )
-                              ),
-                                  (route) => false)
-                        } else {
-                          //TODO add login error message
-                        }
-                        });
+                    dbProvider
+                        .getDatabase()
+                        .getUser(emailController.text)
+                        .then((value) => {
+                              if (value != null &&
+                                  value.password == passwordController.text)
+                                {
+                                  Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => CalendarSection(
+                                              title: 'Calendar', user: value)),
+                                      (route) => false)
+                                }
+                              else
+                                {
+                                  //TODO add login error message
+                                }
+                            });
                   },
                 )),
             Row(

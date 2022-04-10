@@ -1,37 +1,42 @@
+import 'dart:developer';
+
+import 'package:calendar/Database/database.dart' as DB;
 import 'package:calendar/Database/database.dart';
 import 'package:flutter/material.dart';
 import 'Database/databaseProvider.dart';
 import 'package:drift/drift.dart' as drift;
 
 class EditAccountDetailsSection extends StatelessWidget {
-  const EditAccountDetailsSection({Key? key}) : super(key: key);
+  const EditAccountDetailsSection({Key? key, required this.user})
+      : super(key: key);
 
   static const String _title = 'Edit your account';
+  final DB.User user;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text(_title)),
-      body: const EditAccountDetails(),
+      body: EditAccountDetails(
+        user: user,
+      ),
     );
   }
 }
 
 class EditAccountDetails extends StatefulWidget {
-  const EditAccountDetails({Key? key}) : super(key: key);
+  const EditAccountDetails({Key? key, required this.user}) : super(key: key);
 
+  final DB.User user;
   @override
   State<EditAccountDetails> createState() => _EditAccountDetailsState();
 }
 
 class _EditAccountDetailsState extends State<EditAccountDetails> {
   late DatabaseProvider dbProvider = DatabaseProvider();
-  TextEditingController nameController =
-      TextEditingController(text: 'User Test');
-  TextEditingController emailController =
-      TextEditingController(text: 'test@test.ro');
-  TextEditingController oldPasswordController =
-      TextEditingController(text: 'initial value');
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController oldPasswordController = TextEditingController();
   TextEditingController newPasswordController = TextEditingController();
   TextEditingController repeatNewPasswordController = TextEditingController();
 
@@ -52,6 +57,8 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
 
   @override
   Widget build(BuildContext context) {
+    nameController.text = widget.user.username;
+    emailController.text = widget.user.email;
     return Padding(
         padding: const EdgeInsets.all(10),
         child: ListView(
@@ -132,22 +139,29 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
                 child: ElevatedButton(
                   child: const Text('Save changes'),
                   onPressed: () {
-                    final entity = UsersCompanion(
-                      username: drift.Value(nameController.text),
-                      email: drift.Value(emailController.text),
-                      password: drift.Value(newPasswordController.text),
-                    );
-                    dbProvider.getDatabase().updateUser(entity).then((value) =>
-                      Navigator.pop(context)
-                      // Navigator.push(
-                        //   context,
-                        //   MaterialPageRoute(
-                        //       builder: (context) => const CalendarSection(
-                        //             title: 'Calendar',
-                        //             username: '',
-                        //           )),
-                        // )
-                    );
+                    if (oldPasswordController.text == widget.user.password &&
+                        newPasswordController.text != '' &&
+                        repeatNewPasswordController.text != '') {
+                      final entity = UsersCompanion(
+                        id: drift.Value(widget.user.id),
+                        username: drift.Value(nameController.text),
+                        email: drift.Value(emailController.text),
+                        password: drift.Value(newPasswordController.text),
+                      );
+                      dbProvider.getDatabase().updateUser(entity).then(
+                          (value) => {
+                                if (value == true) {Navigator.pop(context)}
+                              }
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //       builder: (context) => const CalendarSection(
+                          //             title: 'Calendar',
+                          //             username: '',
+                          //           )),
+                          // )
+                          );
+                    }
                   },
                 )),
           ],

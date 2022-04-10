@@ -245,19 +245,23 @@ class _AddEditEventState extends State<AddEditEvent> {
             Container(
                 padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
                 child: SizedBox(
-                  height: 25.0 * (reminders.length - 1) != 0
+                  height: (25.0 * (reminders.length - 1) != 0 &&
+                          25.0 * (reminders.length - 1) >= 0
                       ? 25.0 * (reminders.length - 1) > 150
                           ? 150.0
                           : 30.0 * (reminders.length - 1)
-                      : 25.0,
+                      : 25.0),
                   child: ListView.builder(
                       padding: const EdgeInsets.symmetric(
                           vertical: 4, horizontal: 8),
                       itemCount: reminders.length,
                       itemBuilder: (BuildContext context, int index) {
                         // inspect(reminders);
-                        var difference =
-                            reminders[index].difference(widget.event.startTime);
+                        var difference = widget.isEdit
+                            ? widget.event.startTime
+                                .difference(reminders[index])
+                            : reminders[index]
+                                .difference(widget.event.startTime);
 
                         var text = '';
                         if (difference.inDays != 0) {
@@ -317,42 +321,75 @@ class _AddEditEventState extends State<AddEditEvent> {
                 child: ElevatedButton(
                   child: Text(
                       widget.isEdit == true ? 'Save changes' : 'Create event'),
-                  onPressed: () {
+                  onPressed: () async {
                     String subject = subjectController.text;
 
-                    DateTime startDate = DateTime.parse(startDateController.text);
-                    TimeOfDay startTime = stringToTimeOfDay(startTimeController.text);
-                    startDate.add(Duration(hours: startTime.hour, minutes: startTime.minute));
+                    TimeOfDay startTime =
+                        stringToTimeOfDay(startTimeController.text);
+                    DateTime startDate =
+                        DateTime.parse(startDateController.text).add(Duration(
+                            hours: startTime.hour, minutes: startTime.minute));
 
-                    DateTime endDate = DateTime.parse(endDateController.text);
-                    TimeOfDay endTime = stringToTimeOfDay(endTimeController.text);
-                    endDate.add(Duration(hours: endTime.hour, minutes: endTime.minute));
+                    TimeOfDay endTime =
+                        stringToTimeOfDay(endTimeController.text);
+                    DateTime endDate = DateTime.parse(endDateController.text)
+                        .add(Duration(
+                            hours: endTime.hour, minutes: endTime.minute));
 
                     String location = locationController.text;
 
                     if (!widget.isEdit) {
-                      //create action
-
+                      //   //create action
                       final entity = AppointmentsCompanion(
-                        subject: drift.Value(subject),
-                        startTime: drift.Value(startDate),
-                        endTime: drift.Value(endDate),
-                        location: drift.Value(location),
-                        userId: drift.Value(widget.user.id)
-                      );
-                      dbProvider.getDatabase().insertAppointment(entity).then((value) => {
-                          Navigator.push(context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                CalendarSection(
-                                  title: 'Calendar',
-                                  user: widget.user,
-                                  )
-                            )
-                          ),
-                      });
+                          subject: drift.Value(subject),
+                          startTime: drift.Value(startDate),
+                          endTime: drift.Value(endDate),
+                          location: drift.Value(location),
+                          userId: drift.Value(widget.user.id));
+
+                      final result = await dbProvider
+                          .getDatabase()
+                          .insertAppointment(entity);
+
+                      final reminderEntity = RemindersCompanion(
+                          appointmentId: drift.Value(result),
+                          reminderTime: drift.Value(
+                              startDate.subtract(const Duration(minutes: 10))));
+
+                      dbProvider
+                          .getDatabase()
+                          .insertReminder(reminderEntity)
+                          .then(
+                            (value) => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => CalendarSection(
+                                          title: 'Calendar',
+                                          user: widget.user,
+                                        ))),
+                          );
                     } else {
                       //edit action
+                      final entity = AppointmentsCompanion(
+                          id: drift.Value(widget.event.appointmentId),
+                          subject: drift.Value(subject),
+                          startTime: drift.Value(startDate),
+                          endTime: drift.Value(endDate),
+                          location: drift.Value(location),
+                          userId: drift.Value(widget.user.id));
+
+                      dbProvider
+                          .getDatabase()
+                          .updateAppointment(entity)
+                          .then((value) => {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => CalendarSection(
+                                              title: 'Calendar',
+                                              user: widget.user,
+                                            ))),
+                              });
                     }
                   },
                 )),

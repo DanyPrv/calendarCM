@@ -1,3 +1,4 @@
+import 'package:calendar/Database/database.dart' as DB;
 import 'package:calendar/Database/database.dart';
 import 'package:calendar/addEditEvent.dart';
 import 'package:calendar/calendar.dart';
@@ -5,14 +6,16 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'Classes/calendarAppointment.dart';
+import 'Database/databaseProvider.dart';
 
 class EventViewSection extends StatelessWidget {
-  const EventViewSection({Key? key, required this.event, required this.user}) : super(key: key);
+  EventViewSection({Key? key, required this.event, required this.user})
+      : super(key: key);
 
+  DatabaseProvider dbProvider = DatabaseProvider();
   final CalendarAppointment event;
   static const String _title = 'Event view';
   final User user;
-
 
   @override
   Widget build(BuildContext context) {
@@ -35,18 +38,28 @@ class EventViewSection extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            onPressed: () {
-              Navigator.pop(context);
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //         builder: (context) => const CalendarSection(
-              //               title: 'Calendar',
-              //               username: '',
-              //             )));
-
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text('Deleted')));
+            onPressed: () async {
+              final _db = dbProvider.getDatabase();
+              var appReminders =
+                  await _db.getRemindersByAppointmentId(event.appointmentId);
+              for (DB.Reminder reminder in appReminders) {
+                _db.deleteReminders(reminder.id);
+              }
+              dbProvider
+                  .getDatabase()
+                  .deleteAppointment(event.appointmentId)
+                  .then((value) => {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Deleted'))),
+                        Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CalendarSection(
+                                      title: 'Calendar',
+                                      user: user,
+                                    )),
+                            (route) => false),
+                      });
             },
           ),
         ],
@@ -191,8 +204,8 @@ class _EventViewState extends State<EventView> {
                               vertical: 4, horizontal: 8),
                           itemCount: widget.event.reminders.length,
                           itemBuilder: (BuildContext context, int index) {
-                            var difference = widget.event.reminders[index]
-                                .difference(widget.event.startTime);
+                            var difference = widget.event.startTime
+                                .difference(widget.event.reminders[index]);
 
                             var text = '';
                             if (difference.inDays != 0) {

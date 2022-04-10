@@ -4,17 +4,18 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 const fetchReminder = "fetchReminder";
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
     switch (task) {
       case fetchReminder:
-      // Code to run in background
+        // Code to run in background
         List<DateTime> reminders = getReminders();
         tz.initializeTimeZones();
 
-        for(int i=0; i<reminders.length; i++) {
+        for (int i = 0; i < reminders.length; i++) {
           String eventBody = 'You have one event in ' +
               reminders[i].difference(DateTime.now()).inMinutes.toString() +
               ' minute(s) ';
@@ -29,7 +30,7 @@ void callbackDispatcher() {
                       channelDescription: 'channel_description')),
               androidAllowWhileIdle: true,
               uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime);
+                  UILocalNotificationDateInterpretation.absoluteTime);
         }
         break;
     }
@@ -45,4 +46,3 @@ List<DateTime> getReminders() {
     today.add(const Duration(minutes: 2))
   ];
 }
-
