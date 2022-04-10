@@ -1,57 +1,86 @@
 import 'package:calendar/Classes/calendarAppointment.dart';
+import 'package:calendar/Database/database.dart';
 import 'package:calendar/calendar.dart';
 import 'package:calendar/googleMap.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:drift/drift.dart' as drift;
+
+import 'Database/databaseProvider.dart';
 
 class AddEditEventSection extends StatelessWidget {
-  const AddEditEventSection(
-      {Key? key, required this.event, required this.isEdit})
+  AddEditEventSection(
+      {Key? key, required this.event, required this.isEdit, required this.user})
       : super(key: key);
   final bool isEdit;
   final CalendarAppointment event;
+  final User user;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(isEdit == true ? 'Edit event' : 'Add event')),
-      body: AddEditEvent(
-        event: event,
-        isEdit: isEdit,
-      ),
+      body: AddEditEvent(event: event, isEdit: isEdit, user: user),
     );
   }
 }
 
 class AddEditEvent extends StatefulWidget {
-  const AddEditEvent({Key? key, required this.event, required this.isEdit})
+  const AddEditEvent(
+      {Key? key, required this.event, required this.isEdit, required this.user})
       : super(key: key);
 
   final bool isEdit;
   final CalendarAppointment event;
+  final User user;
+
   @override
   State<AddEditEvent> createState() => _AddEditEventState();
 }
 
 class _AddEditEventState extends State<AddEditEvent> {
+  DatabaseProvider dbProvider = DatabaseProvider();
+
   TextEditingController subjectController = TextEditingController();
   TextEditingController locationController = TextEditingController();
+  TextEditingController startDateController = TextEditingController();
+  TextEditingController startTimeController = TextEditingController();
+  TextEditingController endDateController = TextEditingController();
+  TextEditingController endTimeController = TextEditingController();
 
-  DateTime initialDate = DateTime.now();
-  TimeOfDay initialTime = TimeOfDay.now();
-  DateTime? startDate;
-  TimeOfDay? startTime;
-  DateTime? endDate;
-  TimeOfDay? endTime;
+  @override
+  void initState() {
+    super.initState();
+  }
 
   List<DateTime> reminders = [];
 
   @override
+  void dispose() {
+    subjectController.dispose();
+    locationController.dispose();
+    startDateController.dispose();
+    startTimeController.dispose();
+    endDateController.dispose();
+    endTimeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    subjectController.text = widget.event.subject;
-    locationController.text = widget.event.location!;
+    if (startDateController.text.isEmpty) {
+      subjectController.text = widget.event.subject;
+      locationController.text = widget.event.location!;
+      startDateController.text =
+          DateFormat('yyyy-MM-dd').format(widget.event.startTime);
+      startTimeController.text =
+          timeOfDayToString(TimeOfDay.fromDateTime(widget.event.startTime));
+      endDateController.text =
+          DateFormat('yyyy-MM-dd').format(widget.event.endTime);
+      endTimeController.text =
+          timeOfDayToString(TimeOfDay.fromDateTime(widget.event.endTime));
+    }
     reminders = widget.event.reminders;
-    initialTime = TimeOfDay.fromDateTime(widget.event.startTime);
     return Padding(
         padding: const EdgeInsets.all(10),
         child: ListView(
@@ -82,45 +111,43 @@ class _AddEditEventState extends State<AddEditEvent> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(fontSize: 18),
-                    ),
-                    onPressed: () {
+                  child: TextField(
+                    controller: startDateController,
+                    onTap: () {
                       showDatePicker(
                               context: context,
-                              initialDate: widget.event.startTime,
+                              initialDate:
+                                  DateTime.parse(startDateController.text),
                               firstDate: DateTime(2013),
                               lastDate: DateTime(2033),
                               initialEntryMode:
                                   DatePickerEntryMode.calendarOnly)
                           .then((value) => setState(() {
-                                startDate = value;
+                                startDateController.text =
+                                    DateFormat('yyyy-MM-dd').format(value!);
                               }));
                     },
-                    child: Text(
-                      DateFormat('dd/MM/yyyy')
-                          .format(widget.event.startTime)
-                          .toString(),
-                      style: const TextStyle(color: Colors.black),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Enter date'),
                   ),
                 ),
                 Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(fontSize: 18),
-                    ),
-                    onPressed: () {
+                  child: TextField(
+                    controller: startTimeController,
+                    onTap: () {
                       showTimePicker(
-                          context: context, initialTime: initialTime);
+                              context: context,
+                              initialTime:
+                                  stringToTimeOfDay(startTimeController.text))
+                          .then((value) => setState(() {
+                                if (value != null) {
+                                  startTimeController.text =
+                                      timeOfDayToString(value);
+                                } else {
+                                  startTimeController.text = '';
+                                }
+                              }));
                     },
-                    child: Text(
-                      DateFormat('hh:mm a')
-                          .format(widget.event.startTime)
-                          .toString(),
-                      style: const TextStyle(color: Colors.black),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Enter time'),
                   ),
                 )
               ],
@@ -135,45 +162,43 @@ class _AddEditEventState extends State<AddEditEvent> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(fontSize: 18),
-                    ),
-                    onPressed: () {
+                  child: TextField(
+                    controller: endDateController,
+                    onTap: () {
                       showDatePicker(
                               context: context,
-                              initialDate: widget.event.endTime,
+                              initialDate:
+                                  DateTime.parse(endDateController.text),
                               firstDate: DateTime(2013),
                               lastDate: DateTime(2033),
                               initialEntryMode:
                                   DatePickerEntryMode.calendarOnly)
                           .then((value) => setState(() {
-                                endDate = value;
+                                endDateController.text =
+                                    DateFormat('yyyy-MM-dd').format(value!);
                               }));
                     },
-                    child: Text(
-                      DateFormat('dd/MM/yyyy')
-                          .format(widget.event.endTime)
-                          .toString(),
-                      style: const TextStyle(color: Colors.black),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Enter date'),
                   ),
                 ),
                 Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(fontSize: 18),
-                    ),
-                    onPressed: () {
+                  child: TextField(
+                    controller: endTimeController,
+                    onTap: () {
                       showTimePicker(
-                          context: context, initialTime: initialTime);
+                              context: context,
+                              initialTime:
+                                  stringToTimeOfDay(endTimeController.text))
+                          .then((value) => setState(() {
+                                if (value != null) {
+                                  endTimeController.text =
+                                      timeOfDayToString(value);
+                                } else {
+                                  endTimeController.text = '';
+                                }
+                              }));
                     },
-                    child: Text(
-                      DateFormat('hh:mm a')
-                          .format(widget.event.endTime)
-                          .toString(),
-                      style: const TextStyle(color: Colors.black),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Enter time'),
                   ),
                 )
               ],
@@ -293,18 +318,62 @@ class _AddEditEventState extends State<AddEditEvent> {
                   child: Text(
                       widget.isEdit == true ? 'Save changes' : 'Create event'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const CalendarSection(
-                                title: 'Calendar',
-                                username: '',
-                              )),
-                    );
+                    String subject = subjectController.text;
+
+                    DateTime startDate = DateTime.parse(startDateController.text);
+                    TimeOfDay startTime = stringToTimeOfDay(startTimeController.text);
+                    startDate.add(Duration(hours: startTime.hour, minutes: startTime.minute));
+
+                    DateTime endDate = DateTime.parse(endDateController.text);
+                    TimeOfDay endTime = stringToTimeOfDay(endTimeController.text);
+                    endDate.add(Duration(hours: endTime.hour, minutes: endTime.minute));
+
+                    String location = locationController.text;
+
+                    if (!widget.isEdit) {
+                      //create action
+
+                      final entity = AppointmentsCompanion(
+                        subject: drift.Value(subject),
+                        startTime: drift.Value(startDate),
+                        endTime: drift.Value(endDate),
+                        location: drift.Value(location),
+                        userId: drift.Value(widget.user.id)
+                      );
+                      dbProvider.getDatabase().insertAppointment(entity).then((value) => {
+                          Navigator.push(context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                CalendarSection(
+                                  title: 'Calendar',
+                                  user: widget.user,
+                                  )
+                            )
+                          ),
+                      });
+                    } else {
+                      //edit action
+                    }
                   },
                 )),
           ],
         ));
+  }
+
+  TimeOfDay stringToTimeOfDay(String input) {
+    List<String> data = input.split(':');
+    if (data.length != 2) {
+      return const TimeOfDay(hour: 0, minute: 0);
+    }
+    return TimeOfDay(hour: int.parse(data[0]), minute: int.parse(data[1]));
+  }
+
+  String timeOfDayToString(TimeOfDay input) {
+    return (input.hour < 10 ? '0' : '') +
+        input.hour.toString() +
+        ':' +
+        (input.minute < 10 ? '0' : '') +
+        input.minute.toString();
   }
 
   static Route<Object?> _dialogBuilder(

@@ -1,7 +1,6 @@
-import 'dart:developer';
-
 import 'package:calendar/Database/database.dart';
 import 'package:flutter/material.dart';
+import 'Database/databaseProvider.dart';
 import 'login.dart';
 import 'Database/database.dart';
 import 'package:drift/drift.dart' as drift;
@@ -28,7 +27,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  late Database _db;
+  late DatabaseProvider dbProvider = DatabaseProvider();
   TextEditingController nameController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
@@ -37,13 +36,10 @@ class _RegisterState extends State<Register> {
   @override
   void initState() {
     super.initState();
-
-    _db = Database();
   }
 
   @override
   void dispose() {
-    _db.close();
     nameController.dispose();
     emailController.dispose();
     repeatPasswordController.dispose();
@@ -127,7 +123,7 @@ class _RegisterState extends State<Register> {
                       email: drift.Value(emailController.text),
                       password: drift.Value(passwordController.text),
                     );
-                    _db.registerUser(entity).then((value) => {
+                    dbProvider.getDatabase().registerUser(entity).then((value) => {
                           Navigator.pushAndRemoveUntil(
                               context,
                               MaterialPageRoute(

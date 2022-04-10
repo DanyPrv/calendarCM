@@ -1,3 +1,4 @@
+import 'package:calendar/Database/database.dart';
 import 'package:calendar/addEditEvent.dart';
 import 'package:calendar/calendar.dart';
 import 'package:flutter/material.dart';
@@ -6,10 +7,12 @@ import 'package:intl/intl.dart';
 import 'Classes/calendarAppointment.dart';
 
 class EventViewSection extends StatelessWidget {
-  const EventViewSection({Key? key, required this.event}) : super(key: key);
+  const EventViewSection({Key? key, required this.event, required this.user}) : super(key: key);
 
   final CalendarAppointment event;
   static const String _title = 'Event view';
+  final User user;
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,19 +29,21 @@ class EventViewSection extends StatelessWidget {
                       builder: (context) => AddEditEventSection(
                             event: event,
                             isEdit: true,
+                            user: user,
                           )));
             },
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const CalendarSection(
-                            title: 'Calendar',
-                            username: '',
-                          )));
+              Navigator.pop(context);
+              // Navigator.push(
+              //     context,
+              //     MaterialPageRoute(
+              //         builder: (context) => const CalendarSection(
+              //               title: 'Calendar',
+              //               username: '',
+              //             )));
 
               ScaffoldMessenger.of(context)
                   .showSnackBar(const SnackBar(content: Text('Deleted')));

@@ -1,10 +1,9 @@
-import 'dart:developer';
-
 import 'package:calendar/Database/database.dart';
 import 'package:calendar/register.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'Database/databaseProvider.dart';
 import 'calendar.dart';
 
 class LoginSection extends StatelessWidget {
@@ -68,19 +67,17 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  late Database _db;
+  DatabaseProvider dbProvider = DatabaseProvider();
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _db = Database();
   }
 
   @override
   void dispose() {
-    _db.close();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -136,7 +133,7 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () async {
-                    _db.getUser(emailController.text).then((value) => {
+                    dbProvider.getDatabase().getUser(emailController.text).then((value) => {
                         if(value != null) {
                           Navigator.pushAndRemoveUntil(
                               context,
@@ -144,7 +141,7 @@ class _LoginState extends State<Login> {
                                   builder: (context) =>
                                       CalendarSection(
                                           title: 'Calendar',
-                                          username: value.username
+                                          user: value
                                       )
                               ),
                                   (route) => false)

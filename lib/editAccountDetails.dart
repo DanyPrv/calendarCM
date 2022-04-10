@@ -1,6 +1,6 @@
 import 'package:calendar/Database/database.dart';
 import 'package:flutter/material.dart';
-import 'calendar.dart';
+import 'Database/databaseProvider.dart';
 import 'package:drift/drift.dart' as drift;
 
 class EditAccountDetailsSection extends StatelessWidget {
@@ -25,7 +25,7 @@ class EditAccountDetails extends StatefulWidget {
 }
 
 class _EditAccountDetailsState extends State<EditAccountDetails> {
-  late Database _db;
+  late DatabaseProvider dbProvider = DatabaseProvider();
   TextEditingController nameController =
       TextEditingController(text: 'User Test');
   TextEditingController emailController =
@@ -38,13 +38,10 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
   @override
   void initState() {
     super.initState();
-
-    _db = Database();
   }
 
   @override
   void dispose() {
-    _db.close();
     nameController.dispose();
     emailController.dispose();
     oldPasswordController.dispose();
@@ -140,14 +137,17 @@ class _EditAccountDetailsState extends State<EditAccountDetails> {
                       email: drift.Value(emailController.text),
                       password: drift.Value(newPasswordController.text),
                     );
-                    _db.updateUser(entity).then((value) => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const CalendarSection(
-                                    title: 'Calendar',
-                                    username: '',
-                                  )),
-                        ));
+                    dbProvider.getDatabase().updateUser(entity).then((value) =>
+                      Navigator.pop(context)
+                      // Navigator.push(
+                        //   context,
+                        //   MaterialPageRoute(
+                        //       builder: (context) => const CalendarSection(
+                        //             title: 'Calendar',
+                        //             username: '',
+                        //           )),
+                        // )
+                    );
                   },
                 )),
           ],
