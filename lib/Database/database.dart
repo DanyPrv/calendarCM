@@ -30,7 +30,7 @@ class Database extends _$Database {
   // you should bump this number whenever you change or add a table definition.
   // Migrations are covered later in the documentation.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   // users
   Future<List<User>> getUsers() async {
@@ -71,6 +71,23 @@ class Database extends _$Database {
         .get();
   }
 
+  Future<List<Appointment>> getAppointmentsTodayByUserId(int userId) async {
+
+    List<Appointment> apps =  await (select(appointments)
+      ..where((tbl) => tbl.userId.equals(userId)))
+        .get();
+    List<Appointment> filtered = <Appointment>[];
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    for(Appointment app in apps){
+      final dateToCheck = DateTime(app.startTime.year, app.startTime.month, app.startTime.day);
+      if(dateToCheck == today) {
+        filtered.add(app);
+      }
+    }
+    return filtered;
+  }
+
   Future<int> insertAppointment(AppointmentsCompanion entity) async {
     return await into(appointments).insert(entity);
   }
@@ -88,6 +105,28 @@ class Database extends _$Database {
     return await (select(reminders)
           ..where((tbl) => tbl.appointmentId.equals(appointmentId)))
         .get();
+  }
+
+  Future<List<Reminder>> getRemindersByUserAndDateRange(
+      int userId, DateTime start, DateTime end) async {
+    List<Appointment> apps = await (select(appointments)
+          ..where((tbl) => tbl.userId.equals(userId)))
+        .get();
+    List<int> appoinmentsId = <int>[];
+    for (Appointment app in apps) {
+      appoinmentsId.add(app.id);
+    }
+    List<Reminder> remindersList = await (select(reminders)
+          ..where((tbl) => tbl.appointmentId.isIn(appoinmentsId)))
+        .get();
+    List<Reminder> finalList = <Reminder>[];
+    for (Reminder rem in remindersList) {
+      if (rem.reminderTime.isAfter(start) && rem.reminderTime.isBefore(end)) {
+        finalList.add(rem);
+      }
+    }
+
+    return finalList;
   }
 
   Future<int> insertReminder(RemindersCompanion entity) async {

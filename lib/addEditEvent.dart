@@ -2,6 +2,7 @@ import 'package:calendar/Classes/calendarAppointment.dart';
 import 'package:calendar/Database/database.dart';
 import 'package:calendar/calendar.dart';
 import 'package:calendar/googleMap.dart';
+import 'package:calendar/worker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
@@ -352,22 +353,34 @@ class _AddEditEventState extends State<AddEditEvent> {
                           .insertAppointment(entity);
 
                       final reminderEntity = RemindersCompanion(
-                          appointmentId: drift.Value(result),
-                          reminderTime: drift.Value(
-                              startDate.subtract(const Duration(minutes: 10))));
+                        appointmentId: drift.Value(result),
+                        reminderTime: drift.Value(
+                            startDate.subtract(const Duration(minutes: 10))),
+                        eventStartDate: drift.Value(startDate),
+                      );
+                      String notificationMessage =
+                          'You have the following event in ' +
+                              startDate.difference( reminderEntity.reminderTime.value).inMinutes.toString() +
+                              ' minutes: ' +
+                              entity.subject.value;
 
-                      dbProvider
+                      final reminderRes = await dbProvider
                           .getDatabase()
-                          .insertReminder(reminderEntity)
-                          .then(
-                            (value) => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => CalendarSection(
-                                          title: 'Calendar',
-                                          user: widget.user,
-                                        ))),
-                          );
+                          .insertReminder(reminderEntity);
+                      if (reminderRes != -1) {
+                        await createNotification(notificationMessage,
+                            reminderEntity.reminderTime.value);
+                        var snackBar = const SnackBar(
+                            content: Text('Event created'));
+                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => CalendarSection(
+                                      title: 'Calendar',
+                                      user: widget.user,
+                                    )));
+                      }
                     } else {
                       //edit action
                       final entity = AppointmentsCompanion(

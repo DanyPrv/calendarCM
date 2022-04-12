@@ -1,22 +1,27 @@
 import 'package:calendar/login.dart';
 import 'package:calendar/worker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:workmanager/workmanager.dart';
+
+import 'worker.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  var initializationSettingsAndroid =
+      const AndroidInitializationSettings('ic_launcher');
+  var initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
   Workmanager().cancelAll();
   await Workmanager().initialize(
     callbackDispatcher,
   );
-  await Workmanager().registerPeriodicTask(
-    "2",
-    fetchReminder,
-    frequency: const Duration(minutes: 15),
-    constraints: Constraints(
-      networkType: NetworkType.connected,
-    ),
-  );
+  DateTime now = DateTime.now();
+  final tomorrow = DateTime(now.year, now.month, now.day + 1);
+  //create a task at 00:00 to notify daily how many events have on each day
+  Workmanager().registerOneOffTask("1", initializeReminderAction,
+      initialDelay: Duration(minutes: tomorrow.difference(now).inMinutes));
   runApp(const MyApp());
 }
 

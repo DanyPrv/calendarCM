@@ -133,13 +133,15 @@ class _LoginState extends State<Login> {
                 child: ElevatedButton(
                   child: const Text('Login'),
                   onPressed: () async {
+                    SnackBar snackBar;
                     dbProvider
                         .getDatabase()
                         .getUser(emailController.text)
-                        .then((value) => {
+                        .then((value) async => {
                               if (value != null &&
                                   value.password == passwordController.text)
                                 {
+                                  DatabaseProvider().setUserId(value.id),
                                   Navigator.pushAndRemoveUntil(
                                       context,
                                       MaterialPageRoute(
@@ -149,7 +151,10 @@ class _LoginState extends State<Login> {
                                 }
                               else
                                 {
-                                  //TODO add login error message
+                                  snackBar = const SnackBar(
+                                      content: Text('Invalid credentials')),
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(snackBar)
                                 }
                             });
                   },

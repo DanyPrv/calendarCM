@@ -579,10 +579,12 @@ class $AppointmentsTable extends Appointments
 class Reminder extends DataClass implements Insertable<Reminder> {
   final int id;
   final DateTime reminderTime;
+  final DateTime eventStartDate;
   final int appointmentId;
   Reminder(
       {required this.id,
       required this.reminderTime,
+      required this.eventStartDate,
       required this.appointmentId});
   factory Reminder.fromData(Map<String, dynamic> data, {String? prefix}) {
     final effectivePrefix = prefix ?? '';
@@ -591,6 +593,8 @@ class Reminder extends DataClass implements Insertable<Reminder> {
           .mapFromDatabaseResponse(data['${effectivePrefix}id'])!,
       reminderTime: const DateTimeType()
           .mapFromDatabaseResponse(data['${effectivePrefix}reminder_time'])!,
+      eventStartDate: const DateTimeType()
+          .mapFromDatabaseResponse(data['${effectivePrefix}event_start_date'])!,
       appointmentId: const IntType()
           .mapFromDatabaseResponse(data['${effectivePrefix}appointment_id'])!,
     );
@@ -600,6 +604,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['reminder_time'] = Variable<DateTime>(reminderTime);
+    map['event_start_date'] = Variable<DateTime>(eventStartDate);
     map['appointment_id'] = Variable<int>(appointmentId);
     return map;
   }
@@ -608,6 +613,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     return RemindersCompanion(
       id: Value(id),
       reminderTime: Value(reminderTime),
+      eventStartDate: Value(eventStartDate),
       appointmentId: Value(appointmentId),
     );
   }
@@ -618,6 +624,7 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     return Reminder(
       id: serializer.fromJson<int>(json['id']),
       reminderTime: serializer.fromJson<DateTime>(json['reminderTime']),
+      eventStartDate: serializer.fromJson<DateTime>(json['eventStartDate']),
       appointmentId: serializer.fromJson<int>(json['appointmentId']),
     );
   }
@@ -627,14 +634,20 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'reminderTime': serializer.toJson<DateTime>(reminderTime),
+      'eventStartDate': serializer.toJson<DateTime>(eventStartDate),
       'appointmentId': serializer.toJson<int>(appointmentId),
     };
   }
 
-  Reminder copyWith({int? id, DateTime? reminderTime, int? appointmentId}) =>
+  Reminder copyWith(
+          {int? id,
+          DateTime? reminderTime,
+          DateTime? eventStartDate,
+          int? appointmentId}) =>
       Reminder(
         id: id ?? this.id,
         reminderTime: reminderTime ?? this.reminderTime,
+        eventStartDate: eventStartDate ?? this.eventStartDate,
         appointmentId: appointmentId ?? this.appointmentId,
       );
   @override
@@ -642,45 +655,54 @@ class Reminder extends DataClass implements Insertable<Reminder> {
     return (StringBuffer('Reminder(')
           ..write('id: $id, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('eventStartDate: $eventStartDate, ')
           ..write('appointmentId: $appointmentId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, reminderTime, appointmentId);
+  int get hashCode =>
+      Object.hash(id, reminderTime, eventStartDate, appointmentId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Reminder &&
           other.id == this.id &&
           other.reminderTime == this.reminderTime &&
+          other.eventStartDate == this.eventStartDate &&
           other.appointmentId == this.appointmentId);
 }
 
 class RemindersCompanion extends UpdateCompanion<Reminder> {
   final Value<int> id;
   final Value<DateTime> reminderTime;
+  final Value<DateTime> eventStartDate;
   final Value<int> appointmentId;
   const RemindersCompanion({
     this.id = const Value.absent(),
     this.reminderTime = const Value.absent(),
+    this.eventStartDate = const Value.absent(),
     this.appointmentId = const Value.absent(),
   });
   RemindersCompanion.insert({
     this.id = const Value.absent(),
     required DateTime reminderTime,
+    required DateTime eventStartDate,
     required int appointmentId,
   })  : reminderTime = Value(reminderTime),
+        eventStartDate = Value(eventStartDate),
         appointmentId = Value(appointmentId);
   static Insertable<Reminder> custom({
     Expression<int>? id,
     Expression<DateTime>? reminderTime,
+    Expression<DateTime>? eventStartDate,
     Expression<int>? appointmentId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (reminderTime != null) 'reminder_time': reminderTime,
+      if (eventStartDate != null) 'event_start_date': eventStartDate,
       if (appointmentId != null) 'appointment_id': appointmentId,
     });
   }
@@ -688,10 +710,12 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
   RemindersCompanion copyWith(
       {Value<int>? id,
       Value<DateTime>? reminderTime,
+      Value<DateTime>? eventStartDate,
       Value<int>? appointmentId}) {
     return RemindersCompanion(
       id: id ?? this.id,
       reminderTime: reminderTime ?? this.reminderTime,
+      eventStartDate: eventStartDate ?? this.eventStartDate,
       appointmentId: appointmentId ?? this.appointmentId,
     );
   }
@@ -705,6 +729,9 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     if (reminderTime.present) {
       map['reminder_time'] = Variable<DateTime>(reminderTime.value);
     }
+    if (eventStartDate.present) {
+      map['event_start_date'] = Variable<DateTime>(eventStartDate.value);
+    }
     if (appointmentId.present) {
       map['appointment_id'] = Variable<int>(appointmentId.value);
     }
@@ -716,6 +743,7 @@ class RemindersCompanion extends UpdateCompanion<Reminder> {
     return (StringBuffer('RemindersCompanion(')
           ..write('id: $id, ')
           ..write('reminderTime: $reminderTime, ')
+          ..write('eventStartDate: $eventStartDate, ')
           ..write('appointmentId: $appointmentId')
           ..write(')'))
         .toString();
@@ -741,6 +769,12 @@ class $RemindersTable extends Reminders
   late final GeneratedColumn<DateTime?> reminderTime =
       GeneratedColumn<DateTime?>('reminder_time', aliasedName, false,
           type: const IntType(), requiredDuringInsert: true);
+  final VerificationMeta _eventStartDateMeta =
+      const VerificationMeta('eventStartDate');
+  @override
+  late final GeneratedColumn<DateTime?> eventStartDate =
+      GeneratedColumn<DateTime?>('event_start_date', aliasedName, false,
+          type: const IntType(), requiredDuringInsert: true);
   final VerificationMeta _appointmentIdMeta =
       const VerificationMeta('appointmentId');
   @override
@@ -750,7 +784,8 @@ class $RemindersTable extends Reminders
       requiredDuringInsert: true,
       defaultConstraints: 'REFERENCES appointments (id)');
   @override
-  List<GeneratedColumn> get $columns => [id, reminderTime, appointmentId];
+  List<GeneratedColumn> get $columns =>
+      [id, reminderTime, eventStartDate, appointmentId];
   @override
   String get aliasedName => _alias ?? 'reminders';
   @override
@@ -770,6 +805,14 @@ class $RemindersTable extends Reminders
               data['reminder_time']!, _reminderTimeMeta));
     } else if (isInserting) {
       context.missing(_reminderTimeMeta);
+    }
+    if (data.containsKey('event_start_date')) {
+      context.handle(
+          _eventStartDateMeta,
+          eventStartDate.isAcceptableOrUnknown(
+              data['event_start_date']!, _eventStartDateMeta));
+    } else if (isInserting) {
+      context.missing(_eventStartDateMeta);
     }
     if (data.containsKey('appointment_id')) {
       context.handle(

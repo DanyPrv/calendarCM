@@ -106,6 +106,7 @@ class _CalendarSectionState extends State<CalendarSection> {
             ListTile(
               title: const Text('Logout'),
               onTap: () {
+                DatabaseProvider().setUserId(null);
                 Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(
