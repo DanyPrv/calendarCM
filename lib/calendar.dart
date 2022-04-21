@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:calendar/Database/database.dart' as DB;
 import 'package:calendar/addEditEvent.dart';
 import 'package:calendar/eventView.dart';
@@ -131,7 +133,7 @@ class _CalendarSectionState extends State<CalendarSection> {
               subject: '',
               location: '',
               color: Colors.blue[300],
-              reminders: [startTime.add(const Duration(minutes: 10))]);
+              reminders: []);
 
           Navigator.push(
               context,
@@ -185,7 +187,6 @@ Future<List<CalendarAppointment>> getAppointments(
         startTime: app.startTime,
         subject: app.subject));
   }
-
   return meetings;
 }
 

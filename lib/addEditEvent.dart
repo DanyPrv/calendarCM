@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:calendar/Classes/calendarAppointment.dart';
 import 'package:calendar/Database/database.dart';
 import 'package:calendar/calendar.dart';
@@ -6,6 +8,7 @@ import 'package:calendar/worker.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:calendar/Database/database.dart' as DB;
 
 import 'Database/databaseProvider.dart';
 
@@ -51,24 +54,6 @@ class _AddEditEventState extends State<AddEditEvent> {
 
   @override
   void initState() {
-    super.initState();
-  }
-
-  List<DateTime> reminders = [];
-
-  @override
-  void dispose() {
-    subjectController.dispose();
-    locationController.dispose();
-    startDateController.dispose();
-    startTimeController.dispose();
-    endDateController.dispose();
-    endTimeController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     if (startDateController.text.isEmpty) {
       subjectController.text = widget.event.subject;
       locationController.text = widget.event.location!;
@@ -81,7 +66,32 @@ class _AddEditEventState extends State<AddEditEvent> {
       endTimeController.text =
           timeOfDayToString(TimeOfDay.fromDateTime(widget.event.endTime));
     }
-    reminders = widget.event.reminders;
+    for (var reminder in widget.event.reminders) {
+      var difference = widget.isEdit
+          ? widget.event.startTime.difference(reminder)
+          : widget.event.startTime.difference(reminder);
+
+      reminders.add(difference);
+    }
+    super.initState();
+  }
+
+  List<Duration> reminders = [];
+
+  @override
+  void dispose() {
+    subjectController.dispose();
+    locationController.dispose();
+    startDateController.dispose();
+    startTimeController.dispose();
+    endDateController.dispose();
+    endTimeController.dispose();
+    reminders.clear();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
         padding: const EdgeInsets.all(10),
         child: ListView(
@@ -222,8 +232,7 @@ class _AddEditEventState extends State<AddEditEvent> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) =>
-                                      const GoogleMapSection()));
+                                  builder: (context) => GoogleMapSection()));
                         },
                         icon: const Icon(Icons.add_location_alt_outlined)),
                     Expanded(
@@ -257,28 +266,23 @@ class _AddEditEventState extends State<AddEditEvent> {
                           vertical: 4, horizontal: 8),
                       itemCount: reminders.length,
                       itemBuilder: (BuildContext context, int index) {
-                        // inspect(reminders);
-                        var difference = widget.isEdit
-                            ? widget.event.startTime
-                                .difference(reminders[index])
-                            : reminders[index]
-                                .difference(widget.event.startTime);
-
                         var text = '';
-                        if (difference.inDays != 0) {
-                          text = difference.inDays.toString() +
+                        if (reminders[index].inDays != 0) {
+                          text = reminders[index].inDays.toString() +
                               ' ' +
-                              (difference.inDays > 1 ? 'days' : 'day') +
+                              (reminders[index].inDays > 1 ? 'days' : 'day') +
                               ' before';
-                        } else if (difference.inHours != 0) {
-                          text = difference.inHours.toString() +
+                        } else if (reminders[index].inHours != 0) {
+                          text = reminders[index].inHours.toString() +
                               ' ' +
-                              (difference.inHours > 1 ? 'hours' : 'hour') +
+                              (reminders[index].inHours > 1
+                                  ? 'hours'
+                                  : 'hour') +
                               ' before';
-                        } else if (difference.inMinutes != 0) {
-                          text = difference.inMinutes.toString() +
+                        } else if (reminders[index].inMinutes != 0) {
+                          text = reminders[index].inMinutes.toString() +
                               ' ' +
-                              (difference.inMinutes > 1
+                              (reminders[index].inMinutes > 1
                                   ? 'minutes'
                                   : 'minute') +
                               ' before';
@@ -301,12 +305,20 @@ class _AddEditEventState extends State<AddEditEvent> {
                         textStyle: const TextStyle(fontSize: 18),
                       ),
                       onPressed: () {
-                        // Navigator.push(
-                        //     context,
-                        //     MaterialPageRoute(
-                        //         builder: (context) =>
-                        //             const RemindersDialogSection()));
-                        Navigator.of(context).restorablePush(_dialogBuilder);
+                        var optionValue = getReminderOptionValues();
+                        showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return _MyDialog(
+                                onSelectedOptionChanged: (value) {
+                                  reminders.clear();
+                                  setState(() {
+                                    reminders.addAll(value);
+                                  });
+                                },
+                                optionValues: optionValue,
+                              );
+                            });
                       },
                       child: Row(children: const <Widget>[
                         Icon(Icons.add),
@@ -352,37 +364,42 @@ class _AddEditEventState extends State<AddEditEvent> {
                           .getDatabase()
                           .insertAppointment(entity);
 
-                      final reminderEntity = RemindersCompanion(
-                        appointmentId: drift.Value(result),
-                        reminderTime: drift.Value(
-                            startDate.subtract(const Duration(minutes: 10))),
-                        eventStartDate: drift.Value(startDate),
-                      );
-                      String notificationMessage =
-                          'You have the following event in ' +
-                              startDate.difference( reminderEntity.reminderTime.value).inMinutes.toString() +
-                              ' minutes: ' +
-                              entity.subject.value;
+                      if (reminders.isNotEmpty) {
+                        for (var reminder in reminders) {
+                          var reminderTime = startDate.subtract(reminder);
+                          final reminderEntity = RemindersCompanion(
+                            appointmentId: drift.Value(result),
+                            reminderTime: drift.Value(reminderTime),
+                            eventStartDate: drift.Value(startDate),
+                          );
+                          String notificationMessage =
+                              'You have the following event in ' +
+                                  startDate
+                                      .difference(
+                                          reminderEntity.reminderTime.value)
+                                      .inMinutes
+                                      .toString() +
+                                  ' minutes: ' +
+                                  entity.subject.value;
 
-                      final reminderRes = await dbProvider
-                          .getDatabase()
-                          .insertReminder(reminderEntity);
-                      if (reminderRes != -1) {
-                        await createNotification(notificationMessage,
-                            reminderEntity.reminderTime.value);
-                        var snackBar = const SnackBar(
-                            content: Text('Event created'));
-                        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => CalendarSection(
-                                      title: 'Calendar',
-                                      user: widget.user,
-                                    )));
+                          final reminderRes = await dbProvider
+                              .getDatabase()
+                              .insertReminder(reminderEntity);
+                          if (reminderRes != -1) {
+                            await createNotification(notificationMessage,
+                                reminderEntity.reminderTime.value);
+                          }
+                        }
                       }
                     } else {
                       //edit action
+                      var appReminders = await dbProvider
+                          .getDatabase()
+                          .getRemindersByAppointmentId(
+                              widget.event.appointmentId);
+                      for (DB.Reminder reminder in appReminders) {
+                        dbProvider.getDatabase().deleteReminders(reminder.id);
+                      }
                       final entity = AppointmentsCompanion(
                           id: drift.Value(widget.event.appointmentId),
                           subject: drift.Value(subject),
@@ -391,19 +408,50 @@ class _AddEditEventState extends State<AddEditEvent> {
                           location: drift.Value(location),
                           userId: drift.Value(widget.user.id));
 
-                      dbProvider
-                          .getDatabase()
-                          .updateAppointment(entity)
-                          .then((value) => {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => CalendarSection(
-                                              title: 'Calendar',
-                                              user: widget.user,
-                                            ))),
-                              });
+                      await dbProvider.getDatabase().updateAppointment(entity);
+
+                      if (reminders.isNotEmpty) {
+                        for (var reminder in reminders) {
+                          var reminderTime = startDate.subtract(reminder);
+                          final reminderEntity = RemindersCompanion(
+                            appointmentId:
+                                drift.Value(widget.event.appointmentId),
+                            reminderTime: drift.Value(reminderTime),
+                            eventStartDate: drift.Value(startDate),
+                          );
+                          String notificationMessage =
+                              'You have the following event in ' +
+                                  startDate
+                                      .difference(
+                                          reminderEntity.reminderTime.value)
+                                      .inMinutes
+                                      .toString() +
+                                  ' minutes: ' +
+                                  entity.subject.value;
+
+                          final reminderRes = await dbProvider
+                              .getDatabase()
+                              .insertReminder(reminderEntity);
+                          if (reminderRes != -1) {
+                            await createNotification(notificationMessage,
+                                reminderEntity.reminderTime.value);
+                          }
+                        }
+                      }
                     }
+
+                    // var snackBar =
+                    //     const SnackBar(content: Text('Event edited'));
+                    // ScaffoldMessenger.of(context).showSnackBar(snackBar);
+
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => CalendarSection(
+                                  title: 'Calendar',
+                                  user: widget.user,
+                                )),
+                        (route) => false);
                   },
                 )),
           ],
@@ -426,51 +474,100 @@ class _AddEditEventState extends State<AddEditEvent> {
         input.minute.toString();
   }
 
-  static Route<Object?> _dialogBuilder(
-      BuildContext context, Object? arguments) {
-    return DialogRoute<void>(
-      context: context,
-      builder: (BuildContext context) => Dialog(
-          child: SizedBox(
-        height: 170,
-        child: ListView(
-          children: <Widget>[
-            ListTile(
-              title: Row(
-                children: [
-                  Checkbox(
-                    value: true,
-                    onChanged: (bool? value) {},
-                  ),
-                  const Text('10 minutes before')
-                ],
-              ),
+  List<Duration> getReminderOptionValues() {
+    return [
+      const Duration(minutes: 10),
+      const Duration(hours: 2),
+      const Duration(days: 1)
+    ];
+  }
+}
+
+class _MyDialog extends StatefulWidget {
+  const _MyDialog({
+    required this.onSelectedOptionChanged,
+    required this.optionValues,
+  });
+
+  final ValueChanged<List<Duration>> onSelectedOptionChanged;
+  final List<Duration> optionValues;
+
+  @override
+  _MyDialogState createState() => _MyDialogState();
+}
+
+class _MyDialogState extends State<_MyDialog> {
+  List<bool?> _tempSelectedOptions = [false, false, false];
+  List<Duration> _tempOptionValues = [];
+  @override
+  void initState() {
+    // _tempSelectedOptions = widget.selectedCities;
+    // _tempOptionValues=widget.optionValues;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+        child: SizedBox(
+      height: 170,
+      child: ListView(
+        children: <Widget>[
+          ListTile(
+            title: Row(
+              children: [
+                Checkbox(
+                  value: _tempSelectedOptions[0],
+                  onChanged: (bool? value) {
+                    changeOptions(value, 0);
+                  },
+                ),
+                const Text('10 minutes before')
+              ],
             ),
-            ListTile(
-              title: Row(
-                children: [
-                  Checkbox(
-                    value: false,
-                    onChanged: (bool? value) {},
-                  ),
-                  const Text('2 hours before')
-                ],
-              ),
+          ),
+          ListTile(
+            title: Row(
+              children: [
+                Checkbox(
+                  value: _tempSelectedOptions[1],
+                  onChanged: (bool? value) {
+                    changeOptions(value, 1);
+                  },
+                ),
+                const Text('2 hours before')
+              ],
             ),
-            ListTile(
-              title: Row(
-                children: [
-                  Checkbox(
-                    value: false,
-                    onChanged: (bool? value) {},
-                  ),
-                  const Text('1 day before')
-                ],
-              ),
-            )
-          ],
-        ),
-      )),
-    );
+          ),
+          ListTile(
+            title: Row(
+              children: [
+                Checkbox(
+                  value: _tempSelectedOptions[2],
+                  onChanged: (bool? value) {
+                    changeOptions(value, 2);
+                  },
+                ),
+                const Text('1 day before')
+              ],
+            ),
+          )
+        ],
+      ),
+    ));
+  }
+
+  void changeOptions(bool? value, optionNumber) {
+    if (value == true) {
+      _tempOptionValues.add(widget.optionValues[optionNumber]);
+    } else {
+      _tempOptionValues.remove(widget.optionValues[optionNumber]);
+    }
+    widget.onSelectedOptionChanged(_tempOptionValues);
+    var _newState = _tempSelectedOptions;
+    _newState[optionNumber] = value;
+    setState(() {
+      _tempSelectedOptions = _newState;
+    });
   }
 }
