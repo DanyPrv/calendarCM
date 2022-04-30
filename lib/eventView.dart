@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:calendar/Database/database.dart' as DB;
 import 'package:calendar/Database/database.dart';
 import 'package:calendar/addEditEvent.dart';
@@ -7,6 +9,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'Classes/calendarAppointment.dart';
 import 'Database/databaseProvider.dart';
+import 'package:geocoding/geocoding.dart';
+import 'dart:async';
 
 class EventViewSection extends StatelessWidget {
   EventViewSection({Key? key, required this.event, required this.user})
@@ -77,10 +81,52 @@ class EventView extends StatefulWidget {
 }
 
 class _EventViewState extends State<EventView> {
+  final Completer<GoogleMapController> _controllerGoogleMap = Completer();
+  GoogleMapController? _controller;
   static const _initialCameraPosition =
       CameraPosition(target: LatLng(37.773972, -122.431297), zoom: 11.5);
   final Set<Marker> markers = {};
-  static const LatLng showLocation = LatLng(37.773972, -122.431297);
+  String locationText = '';
+
+  void getMarker() async {
+    if (locationText != '') {
+      try {
+        List<Location> locations = await locationFromAddress(locationText);
+
+        Location firstLocation = locations.first;
+        LatLng coordinates =
+            LatLng(firstLocation.latitude, firstLocation.longitude);
+
+        setState(() {
+          markers.add(Marker(
+            //add first marker
+            markerId: MarkerId(coordinates.toString()),
+            position: coordinates, //position of marker
+            infoWindow: InfoWindow(
+              //popup info
+              title: widget.event.location,
+              // snippet: 'My Custom Subtitle',
+            ),
+            icon: BitmapDescriptor.defaultMarker, //Icon for Marker
+          ));
+        });
+
+        _controller?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: coordinates, zoom: 11.5),
+          ),
+        );
+      } catch (e) {
+        inspect(e);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    locationText = widget.event.location!;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +221,13 @@ class _EventViewState extends State<EventView> {
                           'Location:',
                           style: TextStyle(fontSize: 20),
                         )),
+                    Container(
+                        alignment: Alignment.topLeft,
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          locationText,
+                          style: const TextStyle(fontSize: 20),
+                        )),
                     SizedBox(
                         height: 250,
                         child: Scaffold(
@@ -182,7 +235,12 @@ class _EventViewState extends State<EventView> {
                             initialCameraPosition: _initialCameraPosition,
                             zoomControlsEnabled: false,
                             zoomGesturesEnabled: true,
-                            markers: getmarkers(),
+                            onMapCreated: (GoogleMapController _cntlr) {
+                              _controllerGoogleMap.complete(_cntlr);
+                              _controller = _cntlr;
+                              getMarker();
+                            },
+                            markers: markers,
                           ),
                         )),
                   ],
@@ -240,25 +298,6 @@ class _EventViewState extends State<EventView> {
                 )),
           ],
         ));
-  }
-
-  Set<Marker> getmarkers() {
-    //markers to place on map
-    setState(() {
-      markers.add(Marker(
-        //add first marker
-        markerId: MarkerId(showLocation.toString()),
-        position: showLocation, //position of marker
-        infoWindow: InfoWindow(
-          //popup info
-          title: widget.event.location,
-          // snippet: 'My Custom Subtitle',
-        ),
-        icon: BitmapDescriptor.defaultMarker, //Icon for Marker
-      ));
-    });
-
-    return markers;
   }
 }
 

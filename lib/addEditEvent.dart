@@ -13,7 +13,7 @@ import 'package:calendar/Database/database.dart' as DB;
 import 'Database/databaseProvider.dart';
 
 class AddEditEventSection extends StatelessWidget {
-  AddEditEventSection(
+  const AddEditEventSection(
       {Key? key, required this.event, required this.isEdit, required this.user})
       : super(key: key);
   final bool isEdit;
@@ -228,11 +228,13 @@ class _AddEditEventState extends State<AddEditEvent> {
                     IconButton(
                         color: Colors.green,
                         padding: const EdgeInsets.only(right: 4),
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => GoogleMapSection()));
+                                  builder: (context) =>
+                                      const GoogleMapSection()));
+                          locationController.text = result;
                         },
                         icon: const Icon(Icons.add_location_alt_outlined)),
                     Expanded(
@@ -498,7 +500,7 @@ class _MyDialog extends StatefulWidget {
 
 class _MyDialogState extends State<_MyDialog> {
   List<bool?> _tempSelectedOptions = [false, false, false];
-  List<Duration> _tempOptionValues = [];
+  final List<Duration> _tempOptionValues = [];
   @override
   void initState() {
     // _tempSelectedOptions = widget.selectedCities;
